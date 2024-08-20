@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"log"
 	"net"
 )
@@ -27,8 +25,6 @@ func main() {
 			log.Panic(err)
 		}
 
-		io.WriteString(conn, "\n TCP Server \n")
-		fmt.Fprintln(conn, "Fprint Statment")
-		fmt.Fprintf(conn, "%v", "Fprintf ")
+		go Handle(conn)
 	}
 }
