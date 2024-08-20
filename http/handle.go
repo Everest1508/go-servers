@@ -11,16 +11,15 @@ func Handle(conn net.Conn) {
 	defer conn.Close()
 
 	// handle request from client ( read )
-	method := request(conn)
-	if method == "GET" {
-		fmt.Print(method)
-	}
+	info := request(conn)
+
 	// deliver response to client (write)
-	response(conn)
+	response(conn, info)
 }
 
-func request(conn net.Conn) string {
-	method := "GET"
+func request(conn net.Conn) []string {
+	var method string
+	var url string
 	i := 0
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
@@ -29,9 +28,10 @@ func request(conn net.Conn) string {
 		fmt.Println(ln)
 
 		if i == 0 {
-			fmt.Printf("***Method %s", strings.Fields(ln)[0])
+			fmt.Printf("***Method %s\n", strings.Fields(ln)[0])
+			fmt.Printf("***URL %s\n", strings.Fields(ln)[1])
 			method = strings.Fields(ln)[0]
-			fmt.Printf("***URL %s", strings.Fields(ln)[1])
+			url = strings.Fields(ln)[1]
 		}
 		if ln == "" {
 			break
@@ -39,17 +39,22 @@ func request(conn net.Conn) string {
 		i++
 	}
 
-	return method
+	return []string{
+		method, url,
+	}
 }
 
-func response(conn net.Conn) {
+func response(conn net.Conn, info []string) {
 	body := `<!DOCTYPE html><html>
 	<head>
 	<title>Server Response</title>
 	</head>
 	<body>
 	<h1>
-	Response
+	method : %s
+	</h1>
+	<h1>
+	path : %s
 	</h1>	
 	</body>
 	</html>`
@@ -58,5 +63,5 @@ func response(conn net.Conn) {
 	fmt.Fprintf(conn, "Content-Length: %d\r\n", len(body))
 	fmt.Fprint(conn, "Content-Type: text/html \r\n")
 	fmt.Fprint(conn, "\r\n")
-	fmt.Fprint(conn, body)
+	fmt.Fprintf(conn, body, info[0], info[1])
 }
